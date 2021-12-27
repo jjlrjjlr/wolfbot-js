@@ -12,24 +12,18 @@
 
 //     You should have received a copy of the GNU Affero General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
-const {Client, Intents, Interaction} = require('discord.js')
-const { readFile } = require('fs')
-const {token} = require('./config.json')
-const client = new Client({intents:[Intents.FLAGS.GUILDS]})
+const {SlashCommandBuilder} = require('@discordjs/builders');
+const {REST} = require('@discordjs/rest');
+const {Routes} = require('discord-api-types/v9');
+const {token, clientId, guildId} = require('./config.json');
 
+const commands = [
+    new SlashCommandBuilder().setName('ping').setDescription('Return WolfBots latency.')
+]
+    .map(commands => commands.toJSON());
 
-client.once('ready', () => {
-    console.log('Ready');
-})
+const rest = new REST({version: '9'}).setToken(token);
 
-client.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
-
-    const {commandName} = interaction;
-
-    if (commandName == 'ping') {
-        await interaction.reply(client.uptime.toString());
-    }
-});
-
-client.login(token);
+rest.put(Routes.applicationGuildCommands(clientId, guildId), {body: commands})
+    .then(() => console.log('Commands registered.'))
+    .catch(console.error);
